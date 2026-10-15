@@ -1,0 +1,232 @@
+/* ===== SIMANGU landing page (public/assets/css/style.css) ===== */
+
+:root {
+    --ink: #12301f;
+    --ink-soft: #1b4a30;
+    --teal: #1f8a4c;
+    --teal-dark: #166a3a;
+    --teal-light: #9be0b4;
+    --tint: #e8f4ec;
+    --paper: #f7faf8;
+    --muted: #5a6f62;
+    --line: #cfdcd3;
+    --text-soft: #b8d4c3;
+    --amber: #c98a0b;
+    --radius: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.65;
+}
+
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+}
+
+/* ===== Tombol ===== */
+.btn-primary,
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.8rem 1.4rem;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-primary { background: var(--teal); color: #fff; }
+.btn-primary:hover { background: var(--teal-dark); }
+
+.btn-secondary { background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.55); }
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* ===== Navbar ===== */
+.navbar {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.nav-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0.8rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.nav-brand { display: flex; align-items: center; gap: 0.75rem; }
+.nav-brand .logo { height: 40px; width: auto; }
+.brand-text h1 { font-size: 1.15rem; font-weight: 700; line-height: 1.2; }
+.brand-text span { font-size: 0.8rem; color: var(--muted); }
+
+@media (max-width: 640px) {
+    .nav-container .btn-primary { padding: 0.6rem 0.9rem; font-size: 0.85rem; }
+}
+
+/* ===== Hero ===== */
+.hero {
+    position: relative;
+    background: linear-gradient(150deg, var(--ink) 0%, var(--ink-soft) 100%);
+    color: #fff;
+    overflow: hidden;
+}
+
+/* Pola garis tipis; ganti dengan foto gudang bila ada */
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0 2px, transparent 2px 28px);
+    pointer-events: none;
+}
+
+.hero-content {
+    position: relative;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 5rem 1.25rem 5.5rem;
+}
+
+.hero-label {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--teal-light);
+    margin-bottom: 1rem;
+}
+
+.hero-title {
+    font-size: clamp(2rem, 5.5vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+}
+
+.hero-subtitle {
+    margin-top: 1.25rem;
+    max-width: 52ch;
+    font-size: 1.05rem;
+    color: var(--text-soft);
+}
+
+.hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
+
+.hero-highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 2.25rem;
+    font-size: 0.9rem;
+    color: var(--text-soft);
+}
+.hero-highlights i { color: var(--teal-light); margin-right: 0.35rem; }
+
+/* ===== Judul bagian ===== */
+.section-header { max-width: 1100px; margin: 0 auto 2.5rem; padding: 0 1.25rem; }
+.section-header h2 { font-size: clamp(1.5rem, 3.5vw, 2.1rem); font-weight: 700; letter-spacing: -0.02em; max-width: 26ch; }
+.section-header p { margin-top: 0.5rem; color: var(--muted); max-width: 56ch; }
+
+/* ===== Fitur ===== */
+.features { padding: 4.5rem 0; background: var(--tint); }
+
+.features-grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+}
+@media (min-width: 768px) { .features-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.feature-card {
+    background: #fff;
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 1.6rem;
+    box-shadow: 5px 5px 0 var(--line);
+}
+.feature-icon {
+    width: 44px; height: 44px;
+    display: grid; place-items: center;
+    background: var(--tint);
+    color: var(--teal-dark);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+.feature-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; }
+.feature-card p { color: var(--muted); font-size: 0.95rem; }
+
+/* ===== Langkah ===== */
+.steps { padding: 4.5rem 0; scroll-margin-top: 70px; }
+
+.steps-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+@media (min-width: 768px) { .steps-container { grid-template-columns: repeat(3, 1fr); } }
+
+.step-item { border-left: 4px solid var(--teal); padding-left: 1.1rem; }
+.step-number {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--teal-dark);
+    margin-bottom: 0.25rem;
+}
+.step-item h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem; }
+.step-item p { color: var(--muted); font-size: 0.95rem; }
+
+/* ===== Footer ===== */
+.footer { background: var(--ink); color: var(--text-soft); }
+
+.footer-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+@media (min-width: 768px) { .footer-container { grid-template-columns: 1fr 1fr; } }
+
+.footer-brand h3 { color: #fff; font-size: 1.15rem; margin-bottom: 0.25rem; }
+.footer-contact p { margin-bottom: 0.5rem; font-size: 0.92rem; }
+.footer-contact i { width: 1.2rem; color: var(--teal-light); }
+.footer-contact a { text-decoration: none; }
+.footer-contact a:hover { text-decoration: underline; }
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    text-align: center;
+    padding: 1rem 1.25rem;
+    font-size: 0.85rem;
+    color: #98ad9f;
+}
