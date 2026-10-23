@@ -45,16 +45,17 @@
 <body class="bg-paper text-ink font-sans leading-relaxed">
 
     <!-- Navbar -->
-    <nav class="sticky top-0 z-50 bg-white border-b border-line">
-        <div class="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
+    <nav class="w-full bg-white shadow-sm sticky top-0 z-50">
+        <div class="flex items-center justify-between w-full px-4 sm:px-8 py-3">
+            <a href="{{ url('/') }}" class="flex items-center gap-3">
                 <img src="{{ asset('assets/images/logo.png') }}" alt="Logo CV Jayagiry" class="h-10 w-auto">
-                <div>
-                    <h1 class="text-[1.15rem] font-bold leading-tight">CV JAYAGIRY</h1>
-                    <span class="text-xs text-muted block">SIMANGU</span>
+                <div class="leading-tight">
+                    <p class="font-bold text-slate-900">CV JAYAGIRY</p>
+                    <p class="text-xs text-slate-500">SIMANGU</p>
                 </div>
-            </div>
-            <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-main text-white rounded-lg font-semibold text-sm transition-colors hover:bg-teal-dark border-2 border-transparent">
+            </a>
+            <a href="{{ route('login') }}"
+            class="inline-flex items-center gap-2 rounded-lg bg-green-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-800">
                 <i class="fa-solid fa-right-to-bracket"></i> Login
             </a>
         </div>

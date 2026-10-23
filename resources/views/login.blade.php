@@ -7,7 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.6.1/dist/css/tabler.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" rel="stylesheet"/>
   <script type="module" src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.7.1/dist/dotlottie-wc.js"></script>
   <style>
     :root { --ink:#12303a; --teal:#0f7b8a; --teal-dark:#0b5e6a; --tint:#eaf3f5; --muted:#5b6f77; --line:#cfd9dc; --amber:#c98a0b; }
@@ -58,6 +59,7 @@
     a { color:var(--teal-dark); }
   </style>
 </head>
+
 <body>
   <div class="shell">
     <div class="card-login">
@@ -82,46 +84,35 @@
           @endif
 
           <form method="POST" action="{{ route('login') }}" novalidate>
-            @csrf
+              @csrf
 
-            <div class="mb-3">
-              <span class="form-label d-block" id="lbl-role">Masuk sebagai</span>
-              <div class="roles" role="radiogroup" aria-labelledby="lbl-role">
-                <div>
-                  <input type="radio" name="role" id="role-staff" value="staff"
-                         {{ old('role', 'staff') === 'staff' ? 'checked' : '' }}>
-                  <label for="role-staff">Staff Gudang</label>
-                </div>
-                <div>
-                  <input type="radio" name="role" id="role-admin" value="admin"
-                         {{ old('role') === 'admin' ? 'checked' : '' }}>
-                  <label for="role-admin">Admin / Owner</label>
-                </div>
+              <div class="mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input id="email" type="email" name="email" value="{{ old('email') }}"
+                        class="form-control @error('email') is-invalid @enderror"
+                        placeholder="Masukkan email" required autofocus autocomplete="username">
+                  @error('email')
+                      <div class="invalid-feedback">{{ $message }}</div>
+                  @enderror
               </div>
-            </div>
 
-            <div class="mb-3">
-              <label for="username" class="form-label">Username</label>
-              <input id="username" type="text" name="username" value="{{ old('username') }}"
-                     class="form-control" placeholder="Masukkan username"
-                     required autofocus autocomplete="username">
-            </div>
-
-            <div class="mb-3">
-              <label for="password" class="form-label">Kata sandi</label>
-              <div class="pw">
-                <input id="password" type="password" name="password" class="form-control"
-                       placeholder="Masukkan kata sandi" required autocomplete="current-password">
-                <button type="button" id="toggle-pw" aria-controls="password">Lihat</button>
+              <div class="mb-3">
+                  <label for="password" class="form-label">Kata sandi</label>
+                  <div class="input-group">
+                      <input id="password" type="password" name="password"
+                            class="form-control @error('password') is-invalid @enderror"
+                            placeholder="Masukkan kata sandi" required autocomplete="current-password">
+                      <button type="button" class="btn btn-outline-secondary" id="toggle-password"
+                              aria-label="Tampilkan kata sandi" aria-pressed="false">
+                          <i class="ti ti-eye" id="toggle-icon"></i>
+                      </button>
+                  </div>
+                  @error('password')
+                      <div class="invalid-feedback d-block">{{ $message }}</div>
+                  @enderror
               </div>
-            </div>
 
-            <div class="form-check mb-4">
-              <input class="form-check-input" type="checkbox" name="remember" id="remember">
-              <label class="form-check-label" for="remember">Ingat saya</label>
-            </div>
-
-            <button type="submit" class="btn btn-simangu">Masuk</button>
+              <button type="submit" class="btn btn-primary w-100">Masuk</button>
           </form>
 
           <p class="hint mt-4 mb-1">Lupa kata sandi atau belum punya akun? Hubungi admin gudang.</p>
@@ -133,19 +124,31 @@
   </div>
 
   <script>
-    const pw = document.getElementById('password');
-    const btn = document.getElementById('toggle-pw');
-    btn.addEventListener('click', () => {
-      const show = pw.type === 'password';
-      pw.type = show ? 'text' : 'password';
-      btn.textContent = show ? 'Sembunyikan' : 'Lihat';
-    });
+      document.addEventListener('DOMContentLoaded', function () {
+          var input = document.getElementById('password');
+          var btn   = document.getElementById('toggle-password');
+          var icon  = document.getElementById('toggle-icon');
 
-    document.querySelector('form').addEventListener('submit', function () {
-      var b = this.querySelector('button[type=submit]');
-      b.disabled = true;
-      b.textContent = 'Memproses...';
-    });  
+          if (input && btn && icon) {
+              btn.addEventListener('click', function () {
+                  var tampil = input.type === 'password';
+                  input.type = tampil ? 'text' : 'password';
+                  icon.className = tampil ? 'ti ti-eye-off' : 'ti ti-eye';
+                  btn.setAttribute('aria-pressed', tampil ? 'true' : 'false');
+                  btn.setAttribute('aria-label', tampil ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+              });
+          }
+
+          var form = document.querySelector('form');
+          if (form) {
+              form.addEventListener('submit', function () {
+                  var b = this.querySelector('button[type=submit]');
+                  b.disabled = true;
+                  b.textContent = 'Memproses...';
+              });
+          }
+      });
   </script>
+
 </body>
 </html>

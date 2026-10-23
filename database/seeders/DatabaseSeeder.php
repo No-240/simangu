@@ -14,20 +14,17 @@ class DatabaseSeeder extends Seeder
         // Akun awal. Ganti password setelah login pertama.
         User::create([
             'name'     => 'Admin Gudang',
-            'username' => 'admin',
-            'email'    => 'admin@simangu.test',
-            'password' => Hash::make('password'),
+            'email'    => 'admin@gudang.com',
+            'password' => 'admin123',
             'role'     => 'admin',
         ]);
 
         User::create([
             'name'     => 'Staff Gudang',
-            'username' => 'staff',
-            'email'    => 'staff@simangu.test',
-            'password' => Hash::make('password'),
+            'email'    => 'staff@gudang.com',
+            'password' => 'staff123',
             'role'     => 'staff',
         ]);
-
         // Data contoh. Sesuaikan dengan hasil wawancara di CV Jaya Giry.
         $contoh = [
             ['PLT-304-2', 'Plat stainless 304 tebal 2 mm', 'Bahan baku', 'lembar', 10],
