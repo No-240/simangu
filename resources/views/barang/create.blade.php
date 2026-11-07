@@ -1,81 +1,91 @@
-<div class="modal fade" id="modal_barang" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <div class="modal-content">
+@php
+    $input = 'w-full rounded-lg border border-line bg-surface-2 px-3 py-2.5 text-sm text-slate-100 placeholder:text-muted focus:border-brand focus:outline-none';
+    $label = 'mb-1.5 block text-sm font-medium text-slate-300';
+    $error = 'alert-field mt-1.5 hidden text-xs text-red-400';
+@endphp
 
-            <div class="modal-header">
-                <h5 class="modal-title" id="modal_barang_title">Tambah Barang</h5>
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-            </div>
+<div id="modal-barang" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4">
+    <div class="w-full max-w-2xl rounded-2xl border border-line bg-surface shadow-2xl">
 
-            <form id="form_barang">
-                <input type="hidden" id="barang_id_edit" value="">
+        <div class="flex items-center justify-between border-b border-line px-6 py-4">
+            <h3 id="modal-barang-judul" class="text-lg font-semibold text-slate-100">Tambah Barang</h3>
+            <button type="button" data-close class="text-muted hover:text-slate-100" aria-label="Tutup">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
 
-                <div class="modal-body">
-                    <div class="row">
+        <form id="form-barang" class="px-6 py-5">
+            <input type="hidden" id="barang_id_edit" value="">
 
-                        {{-- KIRI --}}
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Kode Barang</label>
-                                <input type="text" class="form-control" name="kode" id="barang_kode" placeholder="Contoh: PLT-304-2">
-                                <div class="alert alert-danger mt-2 d-none alert-field" id="alert-kode"></div>
-                            </div>
+            <div class="grid gap-5 md:grid-cols-2">
 
-                            <div class="form-group">
-                                <label>Nama Barang</label>
-                                <input type="text" class="form-control" name="nama" id="barang_nama" placeholder="Masukkan nama barang">
-                                <div class="alert alert-danger mt-2 d-none alert-field" id="alert-nama"></div>
-                            </div>
+                {{-- Kiri --}}
+                <div class="space-y-5">
+                    <div>
+                        <label for="barang_kode" class="{{ $label }}">Kode Barang</label>
+                        <input type="text" id="barang_kode" name="kode" placeholder="Contoh: PLT-304-2"
+                               class="{{ $input }} uppercase">
+                        <p id="alert-kode" class="{{ $error }}"></p>
+                    </div>
 
-                            <div class="form-group">
-                                <label>Kategori</label>
-                                <select class="form-control" name="kategori" id="barang_kategori">
-                                    <option value=""></option>
-                                    @foreach ($kategori as $k)
-                                        <option value="{{ $k }}">{{ $k }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="alert alert-danger mt-2 d-none alert-field" id="alert-kategori"></div>
-                            </div>
-                        </div>
+                    <div>
+                        <label for="barang_nama" class="{{ $label }}">Nama Barang</label>
+                        <input type="text" id="barang_nama" name="nama" placeholder="Masukkan nama barang" class="{{ $input }}">
+                        <p id="alert-nama" class="{{ $error }}"></p>
+                    </div>
 
-                        {{-- KANAN --}}
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Satuan</label>
-                                <select class="form-control" name="satuan" id="barang_satuan">
-                                    <option value="">-- Pilih Satuan --</option>
-                                    @foreach ($satuanList as $s)
-                                        <option value="{{ $s }}">{{ $s }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="alert alert-danger mt-2 d-none alert-field" id="alert-satuan"></div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Stok Minimum</label>
-                                <input type="number" class="form-control" name="stok_minimum" id="barang_stok_minimum" min="0" placeholder="Misal: 10">
-                                <div class="alert alert-danger mt-2 d-none alert-field" id="alert-stok_minimum"></div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Lokasi / Rak <small class="text-muted">(opsional)</small></label>
-                                <input type="text" class="form-control" name="lokasi" id="barang_lokasi" placeholder="Contoh: Rak A1">
-                                <div class="alert alert-danger mt-2 d-none alert-field" id="alert-lokasi"></div>
-                            </div>
-
-                            <p class="text-muted small mb-0">Stok awal diisi lewat menu Barang Masuk.</p>
-                        </div>
-
+                    <div>
+                        <label for="barang_kategori" class="{{ $label }}">Kategori</label>
+                        <select id="barang_kategori" name="kategori" class="{{ $input }}">
+                            <option value="">-- Pilih Kategori --</option>
+                            @foreach ($kategori as $k)
+                                <option value="{{ $k }}">{{ $k }}</option>
+                            @endforeach
+                        </select>
+                        <p id="alert-kategori" class="{{ $error }}"></p>
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Keluar</button>
-                    <button type="button" class="btn btn-primary" id="store_barang">Simpan</button>
-                </div>
-            </form>
+                {{-- Kanan --}}
+                <div class="space-y-5">
+                    <div>
+                        <label for="barang_satuan" class="{{ $label }}">Satuan</label>
+                        <select id="barang_satuan" name="satuan" class="{{ $input }}">
+                            <option value="">-- Pilih Satuan --</option>
+                            @foreach ($satuanList as $s)
+                                <option value="{{ $s }}">{{ $s }}</option>
+                            @endforeach
+                        </select>
+                        <p id="alert-satuan" class="{{ $error }}"></p>
+                    </div>
 
-        </div>
+                    <div>
+                        <label for="barang_stok_minimum" class="{{ $label }}">Stok Minimum</label>
+                        <input type="number" id="barang_stok_minimum" name="stok_minimum" min="0" inputmode="numeric"
+                               placeholder="Misal: 10" class="{{ $input }}">
+                        <p id="alert-stok_minimum" class="{{ $error }}"></p>
+                    </div>
+
+                    <div>
+                        <label for="barang_lokasi" class="{{ $label }}">Lokasi / Rak <span class="text-muted">(opsional)</span></label>
+                        <input type="text" id="barang_lokasi" name="lokasi" placeholder="Contoh: Rak A1" maxlength="50" class="{{ $input }}">
+                        <p id="alert-lokasi" class="{{ $error }}"></p>
+                    </div>
+
+                    <p class="text-xs text-muted">Stok awal diisi lewat menu Barang Masuk.</p>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3 border-t border-line pt-5">
+                <button type="button" data-close
+                        class="rounded-lg border border-line px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-surface-2">
+                    Keluar
+                </button>
+                <button type="submit" id="btn-simpan"
+                        class="rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-app hover:bg-brand-dark hover:text-white disabled:opacity-50">
+                    Simpan
+                </button>
+            </div>
+        </form>
     </div>
 </div>

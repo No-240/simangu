@@ -1,207 +1,268 @@
 @extends('layouts.app')
 
 @section('title', 'Data Barang')
+@section('subtitle', 'Daftar barang yang bisa dicatat masuk dan keluar')
 
 @section('content')
-    <div class="section-header">
-        <h1>Data Barang</h1>
-        <div class="ml-auto">
-            <a href="javascript:void(0)" class="btn btn-primary" id="button_tambah_barang">
-                <i class="fa fa-plus"></i> Tambah Barang
-            </a>
-        </div>
+<div id="notif" class="fixed right-6 top-20 z-[60] hidden rounded-lg px-4 py-3 text-sm font-medium shadow-lg"></div>
+
+<div class="mb-4 flex justify-end">
+    <button type="button" id="btn-tambah"
+            class="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-app hover:bg-brand-dark hover:text-white">
+        <i class="fa-solid fa-plus"></i> Tambah Barang
+    </button>
+</div>
+
+<div class="overflow-hidden rounded-xl border border-line bg-surface">
+    <div class="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <input id="cari" type="search" placeholder="Cari kode atau nama barang..."
+               class="w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-slate-100 placeholder:text-muted focus:border-brand focus:outline-none sm:w-80">
+        <span id="jumlah-data" class="text-sm text-muted"></span>
     </div>
 
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="table_id" class="display">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Kode Barang</th>
-                                    <th>Nama Barang</th>
-                                    <th>Kategori</th>
-                                    <th>Satuan</th>
-                                    <th>Stok</th>
-                                    <th>Opsi</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-surface-2 text-left text-xs uppercase tracking-wide text-muted">
+                <tr>
+                    <th class="px-5 py-3 font-semibold">No</th>
+                    <th class="px-5 py-3 font-semibold">Kode Barang</th>
+                    <th class="px-5 py-3 font-semibold">Nama Barang</th>
+                    <th class="px-5 py-3 font-semibold">Kategori</th>
+                    <th class="px-5 py-3 font-semibold">Satuan</th>
+                    <th class="px-5 py-3 text-right font-semibold">Stok</th>
+                    <th class="px-5 py-3 font-semibold">Opsi</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-data" class="divide-y divide-line"></tbody>
+        </table>
     </div>
+</div>
 
-    @include('barang.create', ['kategori' => $kategori, 'satuanList' => $satuanList])
-    @include('barang.detail')
+@include('barang.create', [
+    'kategori'   => $kategori,
+    'satuanList' => $satuanList,
+])
+@include('barang.detail')
 @endsection
 
 @push('scripts')
 <script>
-$(function () {
-    var csrf        = $('meta[name="csrf-token"]').attr('content');
-    var modal       = $('#modal_barang');
-    var modalDetail = $('#modal_detail_barang');
+(function () {
+    const csrf        = document.querySelector('meta[name="csrf-token"]').content;
+    const modal       = document.getElementById('modal-barang');
+    const modalDetail = document.getElementById('modal-detail-barang');
+    const form        = document.getElementById('form-barang');
+    const btnSimpan   = document.getElementById('btn-simpan');
+    const tbody       = document.getElementById('tbody-data');
+    const cari        = document.getElementById('cari');
+    const judulModal  = document.getElementById('modal-barang-judul');
+    const idEdit      = document.getElementById('barang_id_edit');
+    let semua = [];
 
-    modal.appendTo('body');
-    modalDetail.appendTo('body');
-
-    var table = $('#table_id').DataTable({
-        columnDefs: [{ orderable: false, targets: 6 }]
-    });
-
-    $('#barang_kategori').select2({ dropdownParent: modal, width: '100%', tags: true, placeholder: 'Pilih atau ketik kategori' });
-    $('#barang_satuan').select2({ dropdownParent: modal, width: '100%' });
-
-    // ================= LOAD TABEL =================
-    function loadTable() {
-        $.get('/barang/get-data', function (res) {
-            table.clear();
-            $.each(res.data, function (i, item) {
-                table.row.add([
-                    i + 1,
-                    item.kode,
-                    item.nama,
-                    item.kategori,
-                    item.satuan,
-                    item.stok,
-                    '<button class="btn btn-success btn-sm detail-btn" data-id="' + item.id + '"><i class="fa fa-eye"></i></button> ' +
-                    '<button class="btn btn-warning btn-sm edit-btn" data-id="' + item.id + '"><i class="fa fa-edit"></i></button> ' +
-                    '<button class="btn btn-danger btn-sm delete-btn" data-id="' + item.id + '"><i class="fa fa-trash"></i></button>'
-                ]);
-            });
-            table.draw(false);
+    function esc(s) {
+        return String(s ?? '-').replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
         });
     }
-    loadTable();
 
-    // ================= HELPER =================
-    function setSelect(sel, val) {
-        if (val && $(sel).find('option[value="' + val + '"]').length === 0) {
-            $(sel).append(new Option(val, val, true, true));
-        }
-        $(sel).val(val || null).trigger('change');
+    function notif(pesan, jenis) {
+        const el = document.getElementById('notif');
+        el.textContent = pesan;
+        el.className = 'fixed right-6 top-20 z-[60] rounded-lg px-4 py-3 text-sm font-medium shadow-lg ' +
+            (jenis === 'gagal' ? 'bg-red-600 text-white' : 'bg-brand text-app');
+        setTimeout(function () { el.classList.add('hidden'); }, 2500);
     }
 
-    function resetForm() {
-        $('#form_barang')[0].reset();
-        $('#barang_id_edit').val('');
-        setSelect('#barang_kategori', null);
-        setSelect('#barang_satuan', null);
-        $('.alert-field').addClass('d-none').text('');
-    }
-
-    function pesanError(xhr) {
-        if (xhr.responseJSON) {
-            if (xhr.responseJSON.errors) return Object.values(xhr.responseJSON.errors)[0][0];
-            if (xhr.responseJSON.message) return xhr.responseJSON.message;
-        }
+    function pesanError(data) {
+        if (data && data.errors) return Object.values(data.errors)[0][0];
+        if (data && data.message) return data.message;
         return 'Terjadi kesalahan pada server.';
     }
 
-    // ================= TAMBAH =================
-    $('#button_tambah_barang').on('click', function () {
-        resetForm();
-        $('#modal_barang_title').text('Tambah Barang');
-        modal.modal('show');
-    });
+    function bukaModal(modalEl) {
+        modalEl.classList.remove('hidden');
+        modalEl.classList.add('flex');
+    }
 
-    // ================= EDIT =================
-    $(document).on('click', '.edit-btn', function () {
-        $.get('/barang/' + $(this).data('id') + '/detail', function (b) {
-            resetForm();
-            $('#modal_barang_title').text('Edit Barang');
-            $('#barang_id_edit').val(b.id);
-            $('#barang_kode').val(b.kode);
-            $('#barang_nama').val(b.nama);
-            setSelect('#barang_kategori', b.kategori);
-            setSelect('#barang_satuan', b.satuan);
-            $('#barang_lokasi').val(b.lokasi);
-            $('#barang_stok_minimum').val(b.stok_minimum);
-            modal.modal('show');
+    function tutupModal(modalEl) {
+        modalEl.classList.add('hidden');
+        modalEl.classList.remove('flex');
+    }
+
+    function bersihkanError() {
+        document.querySelectorAll('.alert-field').forEach(function (el) {
+            el.classList.add('hidden');
+            el.textContent = '';
         });
-    });
+    }
 
-    // ================= SIMPAN (TAMBAH / EDIT) =================
-    $('#store_barang').on('click', function () {
-        var btn = $(this);
-        var id  = $('#barang_id_edit').val();
-
-        $('.alert-field').addClass('d-none').text('');
-        btn.prop('disabled', true).text('Menyimpan...');
-
-        $.ajax({
-            url: id ? '/barang/' + id : '/barang',
-            type: id ? 'PUT' : 'POST',
-            data: $('#form_barang').serialize(),
-            headers: { 'X-CSRF-TOKEN': csrf },
-            success: function (res) {
-                Swal.fire({ icon: 'success', title: res.message, timer: 2000, showConfirmButton: false });
-                modal.modal('hide');
-                loadTable();
-            },
-            error: function (xhr) {
-                if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                    $.each(xhr.responseJSON.errors, function (field, msgs) {
-                        $('#alert-' + field).removeClass('d-none').text(msgs[0]);
-                    });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: pesanError(xhr) });
-                }
-            },
-            complete: function () {
-                btn.prop('disabled', false).text('Simpan');
-            }
+    function render() {
+        const kata  = cari.value.toLowerCase();
+        const hasil = semua.filter(function (i) {
+            return (i.kode + ' ' + i.nama).toLowerCase().includes(kata);
         });
-    });
 
-    // ================= DETAIL =================
-    $(document).on('click', '.detail-btn', function () {
-        $.get('/barang/' + $(this).data('id') + '/detail', function (b) {
-            $('#detail_kode').text(b.kode);
-            $('#detail_nama').text(b.nama);
-            $('#detail_kategori').text(b.kategori || '-');
-            $('#detail_satuan').text(b.satuan);
-            $('#detail_lokasi').text(b.lokasi || '-');
-            $('#detail_stok_minimum').text(b.stok_minimum);
-            $('#detail_stok').text(b.stok);
-            modalDetail.modal('show');
-        });
-    });
+        document.getElementById('jumlah-data').textContent = hasil.length + ' barang';
 
-    // ================= HAPUS =================
-    $(document).on('click', '.delete-btn', function () {
-        var id = $(this).data('id');
+        if (hasil.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-10 text-center text-muted">Belum ada data barang.</td></tr>';
+            return;
+        }
 
-        Swal.fire({
-            title: 'Apakah Kamu Yakin?',
-            text: 'Data akan dihapus!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'YA, HAPUS!',
-            cancelButtonText: 'BATAL'
-        }).then(function (r) {
-            if (!r.isConfirmed) return;
+        tbody.innerHTML = hasil.map(function (i, n) {
+            return '<tr class="hover:bg-surface-2">' +
+                '<td class="px-5 py-3 text-muted">' + (n + 1) + '</td>' +
+                '<td class="px-5 py-3 font-medium text-slate-300">' + esc(i.kode) + '</td>' +
+                '<td class="px-5 py-3 text-slate-100">' + esc(i.nama) + '</td>' +
+                '<td class="px-5 py-3 text-slate-400">' + esc(i.kategori) + '</td>' +
+                '<td class="px-5 py-3 text-slate-400">' + esc(i.satuan) + '</td>' +
+                '<td class="px-5 py-3 text-right font-semibold text-slate-100">' + esc(i.stok) + '</td>' +
+                '<td class="px-5 py-3">' +
+                    '<div class="flex gap-1.5">' +
+                        '<button type="button" data-detail="' + i.id + '" title="Detail" class="rounded-lg bg-indigo-500/20 px-2.5 py-1.5 text-xs text-indigo-300 hover:bg-indigo-500/30"><i class="fa-solid fa-eye"></i></button>' +
+                        '<button type="button" data-edit="' + i.id + '" title="Edit" class="rounded-lg bg-amber-500/20 px-2.5 py-1.5 text-xs text-amber-300 hover:bg-amber-500/30"><i class="fa-solid fa-pen"></i></button>' +
+                        '<button type="button" data-hapus="' + i.id + '" title="Hapus" class="rounded-lg bg-red-600 px-2.5 py-1.5 text-xs text-white hover:bg-red-700"><i class="fa-solid fa-trash"></i></button>' +
+                    '</div>' +
+                '</td>' +
+                '</tr>';
+        }).join('');
+    }
 
-            $.ajax({
-                url: '/barang/' + id,
-                type: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrf },
-                success: function (res) {
-                    Swal.fire({ icon: 'success', title: res.message, timer: 2000, showConfirmButton: false });
-                    loadTable();
-                },
-                error: function (xhr) {
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: pesanError(xhr) });
-                }
+    async function muatData() {
+        const res = await fetch('/barang/get-data', { headers: { 'Accept': 'application/json' } });
+        semua = (await res.json()).data;
+        render();
+    }
+
+    function isiKategori(nilai) {
+        const sel = document.getElementById('barang_kategori');
+        if (nilai && !Array.from(sel.options).some(function (o) { return o.value === nilai; })) {
+            sel.add(new Option(nilai, nilai, true, true));
+        }
+        sel.value = nilai || '';
+    }
+
+    function bukaTambah() {
+        form.reset();
+        idEdit.value = '';
+        isiKategori('');
+        judulModal.textContent = 'Tambah Barang';
+        bersihkanError();
+        bukaModal(modal);
+    }
+
+    async function bukaEdit(id) {
+        const res = await fetch('/barang/' + id + '/detail', { headers: { 'Accept': 'application/json' } });
+        const b = await res.json();
+
+        form.reset();
+        idEdit.value = b.id;
+        document.getElementById('barang_kode').value = b.kode ?? '';
+        document.getElementById('barang_nama').value = b.nama ?? '';
+        isiKategori(b.kategori);
+        document.getElementById('barang_satuan').value = b.satuan ?? '';
+        document.getElementById('barang_lokasi').value = b.lokasi ?? '';
+        document.getElementById('barang_stok_minimum').value = b.stok_minimum ?? 0;
+        judulModal.textContent = 'Edit Barang';
+        bersihkanError();
+        bukaModal(modal);
+    }
+
+    async function bukaDetail(id) {
+        const res = await fetch('/barang/' + id + '/detail', { headers: { 'Accept': 'application/json' } });
+        const b = await res.json();
+
+        document.getElementById('detail_kode').textContent = b.kode;
+        document.getElementById('detail_nama').textContent = b.nama;
+        document.getElementById('detail_kategori').textContent = b.kategori || '-';
+        document.getElementById('detail_satuan').textContent = b.satuan;
+        document.getElementById('detail_lokasi').textContent = b.lokasi || '-';
+        document.getElementById('detail_stok_minimum').textContent = b.stok_minimum;
+        document.getElementById('detail_stok').textContent = b.stok;
+        bukaModal(modalDetail);
+    }
+
+    // Simpan (tambah atau edit)
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        bersihkanError();
+
+        const id = idEdit.value;
+        const body = new FormData(form);
+        if (id) body.append('_method', 'PUT');
+
+        btnSimpan.disabled = true;
+        btnSimpan.textContent = 'Menyimpan...';
+
+        try {
+            const res = await fetch(id ? '/barang/' + id : '/barang', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                body: body
             });
+            const data = await res.json();
+
+            if (res.ok) {
+                tutupModal(modal);
+                notif(data.message);
+                muatData();
+            } else if (res.status === 422 && data.errors) {
+                Object.entries(data.errors).forEach(function (entry) {
+                    const el = document.getElementById('alert-' + entry[0]);
+                    if (el) {
+                        el.textContent = entry[1][0];
+                        el.classList.remove('hidden');
+                    }
+                });
+            } else {
+                notif(pesanError(data), 'gagal');
+            }
+        } catch (err) {
+            notif('Tidak bisa terhubung ke server.', 'gagal');
+        } finally {
+            btnSimpan.disabled = false;
+            btnSimpan.textContent = 'Simpan';
+        }
+    });
+
+    // Aksi di tabel
+    tbody.addEventListener('click', async function (e) {
+        const btnDetail = e.target.closest('[data-detail]');
+        const btnEdit   = e.target.closest('[data-edit]');
+        const btnHapus  = e.target.closest('[data-hapus]');
+
+        if (btnDetail) return bukaDetail(btnDetail.dataset.detail);
+        if (btnEdit)   return bukaEdit(btnEdit.dataset.edit);
+
+        if (btnHapus) {
+            if (!confirm('Data barang akan dihapus. Lanjutkan?')) return;
+
+            const res = await fetch('/barang/' + btnHapus.dataset.hapus, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' }
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                notif(data.message);
+                muatData();
+            } else {
+                notif(pesanError(data), 'gagal');
+            }
+        }
+    });
+
+    // Tutup modal saat klik latar atau tombol tutup
+    [modal, modalDetail].forEach(function (m) {
+        m.addEventListener('click', function (e) {
+            if (e.target === m || e.target.closest('[data-close]')) tutupModal(m);
         });
     });
-});
+
+    document.getElementById('btn-tambah').addEventListener('click', bukaTambah);
+    cari.addEventListener('input', render);
+
+    muatData();
+})();
 </script>
 @endpush
