@@ -10,7 +10,7 @@ class BarangKeluar extends Model
     protected $table = 'barang_keluar';
 
     protected $fillable = [
-        'barang_id', 'user_id', 'jumlah', 'tanggal',
+        'kode_transaksi', 'barang_id', 'user_id', 'jumlah', 'tanggal',
         'keperluan', 'penerima', 'tanda_tangan', 'keterangan',
     ];
 

@@ -9,7 +9,7 @@ class BarangMasuk extends Model
 {
     protected $table = 'barang_masuk';
 
-    protected $fillable = ['barang_id', 'user_id', 'jumlah', 'tanggal', 'supplier', 'keterangan'];
+    protected $fillable = ['kode_transaksi', 'barang_id', 'user_id', 'jumlah', 'tanggal', 'supplier', 'keterangan'];
 
     protected $casts = ['tanggal' => 'date'];
 

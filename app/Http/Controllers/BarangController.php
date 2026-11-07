@@ -3,53 +3,78 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
-use App\Models\BarangMasuk;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class BarangController extends Controller
 {
-    public function create()
+    public function index()
     {
-       $kategoriSaran = Barang::whereNotNull('kategori')
-           ->distinct()
-           ->orderBy('kategori')
-           ->pluck('kategori');
+        $kategori   = Barang::whereNotNull('kategori')->distinct()->orderBy('kategori')->pluck('kategori');
+        $satuanList = ['lembar', 'batang', 'pcs', 'kg', 'meter', 'rol', 'lainnya'];
 
-        return view('barang.create', compact('kategoriSaran'));
+        return view('barang.index', compact('kategori', 'satuanList'));
+    }
+
+    public function getData()
+    {
+        $data = Barang::orderBy('nama')->get()->map(fn ($b) => [
+            'id'       => $b->id,
+            'kode'     => $b->kode,
+            'nama'     => $b->nama,
+            'kategori' => $b->kategori ?? '-',
+            'satuan'   => $b->satuan,
+            'stok'     => $b->stok,
+        ]);
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function detail(Barang $barang)
+    {
+        return response()->json($barang->only(['id', 'kode', 'nama', 'kategori', 'satuan', 'lokasi', 'stok_minimum', 'stok']));
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'kode'         => ['required', 'string', 'max:50', 'unique:barang,kode'],
+        Barang::create($this->validasi($request));
+
+        return response()->json(['message' => 'Data barang berhasil ditambahkan!']);
+    }
+
+    public function update(Request $request, Barang $barang)
+    {
+        $barang->update($this->validasi($request, $barang->id));
+
+        return response()->json(['message' => 'Data barang berhasil diubah!']);
+    }
+
+    public function destroy(Barang $barang)
+    {
+        // Barang yang sudah punya transaksi tidak boleh dihapus, supaya riwayat tetap utuh
+        if ($barang->masuk()->exists() || $barang->keluar()->exists()) {
+            throw ValidationException::withMessages([
+                'hapus' => 'Barang ini sudah punya transaksi, tidak bisa dihapus.',
+            ]);
+        }
+
+        $barang->delete();
+
+        return response()->json(['message' => 'Data barang berhasil dihapus!']);
+    }
+
+    private function validasi(Request $request, ?int $id = null): array
+    {
+        return $request->validate([
+            'kode'         => ['required', 'string', 'max:50', Rule::unique('barang', 'kode')->ignore($id)],
             'nama'         => ['required', 'string', 'max:150'],
             'kategori'     => ['nullable', 'string', 'max:100'],
             'satuan'       => ['required', 'string', 'max:30'],
             'lokasi'       => ['nullable', 'string', 'max:50'],
             'stok_minimum' => ['required', 'integer', 'min:0'],
-            'stok_awal'    => ['nullable', 'integer', 'min:0'],
+        ], [
+            'kode.unique' => 'Kode barang sudah digunakan.',
         ]);
-
-        $stokAwal = (int) ($data['stok_awal'] ?? 0);
-        unset($data['stok_awal']);
-
-        DB::transaction(function () use ($data, $stokAwal) {
-            $barang = Barang::create($data);
-
-            if ($stokAwal > 0) {
-                BarangMasuk::create([
-                    'barang_id'  => $barang->id,
-                    'user_id'    => auth()->id(),
-                    'jumlah'     => $stokAwal,
-                    'tanggal'    => now()->toDateString(),
-                    'keterangan' => 'Stok awal',
-                ]);
-
-                $barang->increment('stok', $stokAwal);
-            }
-        });
-
-        return redirect('/admin/inventory')->with('success', 'Barang baru berhasil ditambahkan.');
-    }    
+    }
 }
