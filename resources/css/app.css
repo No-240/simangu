@@ -1,3 +1,28 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+    --color-app: #0b0c10;
+    --color-surface: #14161d;
+    --color-surface-2: #1b1e27;
+    --color-line: #262a35;
+    --color-brand: #22c55e;
+    --color-brand-dark: #16a34a;
+    --color-muted: #8b90a0;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+    background-color: var(--color-app);
+    color: #e6e8ee;
+}
+
+/* Mode sidebar mini: hanya ikon yang tampil */
+[data-sidebar='mini'] #sidebar {
+    width: 5rem;
+}
+[data-sidebar='mini'] #main {
+    margin-left: 5rem;
+}
+[data-sidebar='mini'] .label {
+    display: none;
+}
