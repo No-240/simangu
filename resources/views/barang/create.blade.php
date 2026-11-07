@@ -67,6 +67,13 @@
                     </div>
 
                     <div>
+                        <label for="barang_harga" class="{{ $label }}">Harga per Satuan (Rp)</label>
+                        <input type="number" id="barang_harga" name="harga" min="0" inputmode="numeric"
+                            placeholder="Contoh: 150000" class="{{ $input }}">
+                        <p id="alert-harga" class="{{ $error }}"></p>
+                    </div>
+
+                    <div>
                         <label for="barang_lokasi" class="{{ $label }}">Lokasi / Rak <span class="text-muted">(opsional)</span></label>
                         <input type="text" id="barang_lokasi" name="lokasi" placeholder="Contoh: Rak A1" maxlength="50" class="{{ $input }}">
                         <p id="alert-lokasi" class="{{ $error }}"></p>

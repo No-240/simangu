@@ -29,6 +29,7 @@
                     <th class="px-5 py-3 font-semibold">Nama Barang</th>
                     <th class="px-5 py-3 font-semibold">Kategori</th>
                     <th class="px-5 py-3 font-semibold">Satuan</th>
+                    <th class="px-5 py-3 text-right font-semibold">Harga</th>
                     <th class="px-5 py-3 text-right font-semibold">Stok</th>
                     <th class="px-5 py-3 font-semibold">Opsi</th>
                 </tr>
@@ -116,6 +117,7 @@
                 '<td class="px-5 py-3 text-slate-100">' + esc(i.nama) + '</td>' +
                 '<td class="px-5 py-3 text-slate-400">' + esc(i.kategori) + '</td>' +
                 '<td class="px-5 py-3 text-slate-400">' + esc(i.satuan) + '</td>' +
+                '<td class="px-5 py-3 text-right text-slate-300">Rp ' + Number(i.harga || 0).toLocaleString('id-ID') + '</td>' +
                 '<td class="px-5 py-3 text-right font-semibold text-slate-100">' + esc(i.stok) + '</td>' +
                 '<td class="px-5 py-3">' +
                     '<div class="flex gap-1.5">' +
@@ -163,6 +165,7 @@
         document.getElementById('barang_satuan').value = b.satuan ?? '';
         document.getElementById('barang_lokasi').value = b.lokasi ?? '';
         document.getElementById('barang_stok_minimum').value = b.stok_minimum ?? 0;
+        document.getElementById('barang_harga').value = b.harga ?? 0;
         judulModal.textContent = 'Edit Barang';
         bersihkanError();
         bukaModal(modal);

@@ -10,7 +10,7 @@ class Barang extends Model
     protected $table = 'barang';
 
     // 'stok' sengaja tidak dimasukkan: stok hanya berubah lewat transaksi masuk/keluar
-    protected $fillable = ['kode', 'nama', 'kategori', 'satuan', 'stok_minimum'];
+    protected $fillable = ['kode', 'nama', 'kategori', 'satuan', 'stok_minimum', 'lokasi', 'harga'];
 
     public function masuk(): HasMany
     {

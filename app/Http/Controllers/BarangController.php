@@ -26,6 +26,7 @@ class BarangController extends Controller
             'kategori' => $b->kategori ?? '-',
             'satuan'   => $b->satuan,
             'stok'     => $b->stok,
+            'harga'    => $b->harga,
         ]);
 
         return response()->json(['data' => $data]);
@@ -33,7 +34,7 @@ class BarangController extends Controller
 
     public function detail(Barang $barang)
     {
-        return response()->json($barang->only(['id', 'kode', 'nama', 'kategori', 'satuan', 'lokasi', 'stok_minimum', 'stok']));
+        return response()->json($barang->only(['id', 'kode', 'nama', 'kategori', 'satuan', 'lokasi', 'stok_minimum', 'stok', 'harga']));
     }
 
     public function store(Request $request)
@@ -73,6 +74,7 @@ class BarangController extends Controller
             'satuan'       => ['required', 'string', 'max:30'],
             'lokasi'       => ['nullable', 'string', 'max:50'],
             'stok_minimum' => ['required', 'integer', 'min:0'],
+            'harga'        => ['required', 'integer', 'min:0'],
         ], [
             'kode.unique' => 'Kode barang sudah digunakan.',
         ]);
