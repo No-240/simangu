@@ -65,6 +65,7 @@ class BarangKeluarController extends Controller
                 'barang_id'      => $barang->id,
                 'user_id'        => auth()->id(),
                 'jumlah'         => $data['jumlah'],
+                'harga_satuan'   => $barang->harga,
                 'tanggal'        => $data['tanggal'],
                 'keperluan'      => $data['keperluan'] ?? null,
                 'penerima'       => $data['penerima'] ?? null,

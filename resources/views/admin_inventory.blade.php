@@ -15,183 +15,186 @@
         ->groupBy(fn ($b) => $b->kategori ?: 'Tanpa kategori')
         ->map->count()
         ->sortDesc();
-
-    $sapaan = now()->hour < 11 ? 'Selamat pagi' : (now()->hour < 15 ? 'Selamat siang' : (now()->hour < 18 ? 'Selamat sore' : 'Selamat malam'));
+    $maksKategori = max($perKategori->max() ?? 0, 1);
 @endphp
 
-<div class="section-header-custom">
-    <h1>{{ $sapaan }}, {{ auth()->user()->name }}!</h1>
-    <div class="ml-auto">
-        <a href="{{ url('/barang-masuk?tambah=1') }}" class="btn btn-primary">
-            <i class="fa fa-arrow-down"></i> Catat Barang Masuk
-        </a>
-        <a href="{{ url('/barang-keluar?tambah=1') }}" class="btn btn-outline-primary">
-            <i class="fa fa-arrow-up"></i> Catat Barang Keluar
-        </a>
-    </div>
+{{-- Tombol cepat --}}
+<div class="mb-6 flex flex-wrap gap-3">
+    <a href="{{ url('/barang-masuk?tambah=1') }}"
+       class="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-app hover:bg-brand-dark hover:text-white">
+        <i class="fa-solid fa-arrow-down"></i> Catat Barang Masuk
+    </a>
+    <a href="{{ url('/barang-keluar?tambah=1') }}"
+       class="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-semibold text-slate-200 hover:border-brand hover:text-brand">
+        <i class="fa-solid fa-arrow-up"></i> Catat Barang Keluar
+    </a>
 </div>
 
 {{-- Kartu statistik --}}
-<div class="row">
+<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     @foreach ([
-        ['label' => 'Total Jenis Barang', 'nilai' => $totalJenis, 'ikon' => 'fa-boxes',                'warna' => 'bg-primary'],
-        ['label' => 'Stok Aman',          'nilai' => $aman,       'ikon' => 'fa-check-circle',         'warna' => 'bg-success'],
-        ['label' => 'Hampir Habis',       'nilai' => $hampir,     'ikon' => 'fa-exclamation-triangle', 'warna' => 'bg-warning'],
-        ['label' => 'Stok Habis',         'nilai' => $habis,      'ikon' => 'fa-times-circle',         'warna' => 'bg-danger'],
+        ['label' => 'Total Jenis Barang', 'nilai' => $totalJenis, 'ikon' => 'fa-boxes-stacked',        'warna' => 'bg-indigo-500/15 text-indigo-300'],
+        ['label' => 'Stok Aman',          'nilai' => $aman,       'ikon' => 'fa-circle-check',         'warna' => 'bg-brand/15 text-brand'],
+        ['label' => 'Hampir Habis',       'nilai' => $hampir,     'ikon' => 'fa-triangle-exclamation', 'warna' => 'bg-amber-500/15 text-amber-300'],
+        ['label' => 'Stok Habis',         'nilai' => $habis,      'ikon' => 'fa-circle-xmark',         'warna' => 'bg-red-500/15 text-red-300'],
     ] as $k)
-        <div class="col-lg-3 col-md-6 col-sm-6 col-12">
-            <div class="card card-statistic-1">
-                <div class="card-icon {{ $k['warna'] }}">
-                    <i class="fas {{ $k['ikon'] }}"></i>
-                </div>
-                <div class="card-wrap">
-                    <div class="card-header"><h4>{{ $k['label'] }}</h4></div>
-                    <div class="card-body">{{ $k['nilai'] }}</div>
-                </div>
+        <div class="rounded-xl border border-line bg-surface p-5">
+            <div class="flex items-start justify-between">
+                <p class="text-sm text-muted">{{ $k['label'] }}</p>
+                <span class="flex h-10 w-10 items-center justify-center rounded-full {{ $k['warna'] }}">
+                    <i class="fa-solid {{ $k['ikon'] }}"></i>
+                </span>
             </div>
+            <p class="mt-3 text-3xl font-bold text-slate-100">{{ $k['nilai'] }}</p>
         </div>
     @endforeach
 </div>
 
 {{-- Grafik --}}
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header"><h4>Jumlah Jenis Barang per Kategori</h4></div>
-            <div class="card-body">
-                <canvas id="chartKategori" height="110"></canvas>
-            </div>
-        </div>
+<div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div class="rounded-xl border border-line bg-surface p-5 lg:col-span-2">
+        <h2 class="mb-4 font-semibold text-slate-100">Jumlah Jenis Barang per Kategori</h2>
+        <canvas id="chartKategori" height="120"></canvas>
     </div>
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header"><h4>Status Stok</h4></div>
-            <div class="card-body">
-                <canvas id="chartStatus"></canvas>
-            </div>
-        </div>
+    <div class="rounded-xl border border-line bg-surface p-5">
+        <h2 class="mb-4 font-semibold text-slate-100">Status Stok</h2>
+        <canvas id="chartStatus"></canvas>
     </div>
 </div>
 
-{{-- Perlu perhatian dan kategori --}}
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header"><h4>Perlu Perhatian</h4></div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th>Barang</th>
-                                <th>Stok</th>
-                                <th>Min.</th>
-                                <th style="width: 160px">Kondisi</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($perluPerhatian as $b)
-                                @php
-                                    $persen = $b->stok_minimum > 0 ? min(100, round($b->stok / $b->stok_minimum * 100)) : 0;
-                                @endphp
-                                <tr>
-                                    <td>
-                                        <strong>{{ $b->nama }}</strong><br>
-                                        <small class="text-muted">{{ $b->kode }}</small>
-                                    </td>
-                                    <td>{{ $b->stok }} {{ $b->satuan }}</td>
-                                    <td>{{ $b->stok_minimum }}</td>
-                                    <td>
-                                        <div class="progress" style="height: 8px">
-                                            <div class="progress-bar {{ $b->stok == 0 ? 'bg-danger' : 'bg-warning' }}" style="width: {{ $persen }}%"></div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @if ($b->stok == 0)
-                                            <span class="badge badge-danger">Habis</span>
-                                        @else
-                                            <span class="badge badge-warning">Hampir Habis</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">Semua stok dalam kondisi aman.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+{{-- Perlu perhatian dan per kategori --}}
+<div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div class="overflow-hidden rounded-xl border border-line bg-surface lg:col-span-2">
+        <div class="border-b border-line px-5 py-4">
+            <h2 class="font-semibold text-slate-100">Perlu Perhatian</h2>
+            <p class="text-xs text-muted">Barang yang habis atau sudah di bawah stok minimum</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-surface-2 text-left text-xs uppercase tracking-wide text-muted">
+                    <tr>
+                        <th class="px-5 py-3 font-semibold">Barang</th>
+                        <th class="px-5 py-3 font-semibold">Stok</th>
+                        <th class="px-5 py-3 text-right font-semibold">Min.</th>
+                        <th class="px-5 py-3 font-semibold">Kondisi</th>
+                        <th class="px-5 py-3 font-semibold">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line">
+                    @forelse ($perluPerhatian as $b)
+                        @php
+                            $persen = $b->stok_minimum > 0 ? min(100, round($b->stok / $b->stok_minimum * 100)) : 0;
+                        @endphp
+                        <tr class="hover:bg-surface-2">
+                            <td class="px-5 py-3">
+                                <p class="font-medium text-slate-100">{{ $b->nama }}</p>
+                                <p class="text-xs text-muted">{{ $b->kode }}</p>
+                            </td>
+                            <td class="px-5 py-3 text-slate-200">{{ $b->stok }} {{ $b->satuan }}</td>
+                            <td class="px-5 py-3 text-right text-slate-300">{{ $b->stok_minimum }}</td>
+                            <td class="px-5 py-3">
+                                <div class="h-2 w-32 overflow-hidden rounded-full bg-surface-2">
+                                    <div class="h-2 rounded-full {{ $b->stok == 0 ? 'bg-red-500' : 'bg-amber-400' }}" style="width: {{ $persen }}%"></div>
+                                </div>
+                            </td>
+                            <td class="px-5 py-3">
+                                @if ($b->stok == 0)
+                                    <span class="rounded-full bg-red-500/15 px-2.5 py-1 text-xs font-semibold text-red-300">Habis</span>
+                                @else
+                                    <span class="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-300">Hampir Habis</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-5 py-10 text-center text-muted">Semua stok dalam kondisi aman.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header"><h4>Per Kategori</h4></div>
-            <div class="card-body">
-                @forelse ($perKategori as $nama => $jumlah)
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>{{ $nama }}</span>
-                            <span class="font-weight-bold">{{ $jumlah }}</span>
-                        </div>
-                        <div class="progress" style="height: 8px">
-                            <div class="progress-bar bg-success" style="width: {{ $jumlah / max($perKategori->max(), 1) * 100 }}%"></div>
-                        </div>
+    <div class="rounded-xl border border-line bg-surface p-5">
+        <h2 class="mb-4 font-semibold text-slate-100">Per Kategori</h2>
+        <div class="space-y-4">
+            @forelse ($perKategori as $nama => $jumlah)
+                <div>
+                    <div class="mb-1.5 flex justify-between text-sm">
+                        <span class="text-slate-300">{{ $nama }}</span>
+                        <span class="font-semibold text-slate-100">{{ $jumlah }}</span>
                     </div>
-                @empty
-                    <p class="text-muted mb-0">Belum ada data barang.</p>
-                @endforelse
-            </div>
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-surface-2">
+                        <div class="h-2 rounded-full bg-brand" style="width: {{ $jumlah / $maksKategori * 100 }}%"></div>
+                    </div>
+                </div>
+            @empty
+                <p class="text-sm text-muted">Belum ada data barang.</p>
+            @endforelse
         </div>
     </div>
 </div>
 
 {{-- Semua barang --}}
-<div class="card">
-    <div class="card-header"><h4>Semua Barang</h4></div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table id="tabel_dashboard" class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Kode</th>
-                        <th>Nama</th>
-                        <th>Kategori</th>
-                        <th>Lokasi</th>
-                        <th>Stok</th>
-                        <th>Min.</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($barang as $b)
-                        @php
-                            $status = $b->stok == 0 ? 'habis' : ($b->stok <= $b->stok_minimum ? 'hampir' : 'aman');
-                        @endphp
-                        <tr>
-                            <td>{{ $b->kode }}</td>
-                            <td>{{ $b->nama }}</td>
-                            <td>{{ $b->kategori ?? '-' }}</td>
-                            <td>{{ $b->lokasi ?? '-' }}</td>
-                            <td>{{ $b->stok }} {{ $b->satuan }}</td>
-                            <td>{{ $b->stok_minimum }}</td>
-                            <td>
-                                @if ($status === 'habis')
-                                    <span class="badge badge-danger">Habis</span>
-                                @elseif ($status === 'hampir')
-                                    <span class="badge badge-warning">Hampir Habis</span>
-                                @else
-                                    <span class="badge badge-success">Aman</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+<div class="overflow-hidden rounded-xl border border-line bg-surface">
+    <div class="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="font-semibold text-slate-100">Semua Barang</h2>
+        <div class="flex gap-2">
+            <input id="cari" type="search" placeholder="Cari kode atau nama..."
+                   class="w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-slate-100 placeholder:text-muted focus:border-brand focus:outline-none sm:w-64">
+            <select id="filterStatus" class="rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-slate-100 focus:border-brand focus:outline-none">
+                <option value="semua">Semua status</option>
+                <option value="aman">Aman</option>
+                <option value="hampir">Hampir habis</option>
+                <option value="habis">Habis</option>
+            </select>
         </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table id="tabelStok" class="min-w-full text-sm">
+            <thead class="bg-surface-2 text-left text-xs uppercase tracking-wide text-muted">
+                <tr>
+                    <th class="px-5 py-3 font-semibold">Kode</th>
+                    <th class="px-5 py-3 font-semibold">Nama</th>
+                    <th class="px-5 py-3 font-semibold">Kategori</th>
+                    <th class="px-5 py-3 font-semibold">Lokasi</th>
+                    <th class="px-5 py-3 text-right font-semibold">Stok</th>
+                    <th class="px-5 py-3 text-right font-semibold">Min.</th>
+                    <th class="px-5 py-3 font-semibold">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-line">
+                @forelse ($barang as $b)
+                    @php
+                        $status = $b->stok == 0 ? 'habis' : ($b->stok <= $b->stok_minimum ? 'hampir' : 'aman');
+                    @endphp
+                    <tr class="hover:bg-surface-2" data-status="{{ $status }}" data-cari="{{ strtolower($b->kode . ' ' . $b->nama) }}">
+                        <td class="px-5 py-3 font-medium text-slate-300">{{ $b->kode }}</td>
+                        <td class="px-5 py-3 text-slate-100">{{ $b->nama }}</td>
+                        <td class="px-5 py-3 text-slate-400">{{ $b->kategori ?? '-' }}</td>
+                        <td class="px-5 py-3 text-slate-400">{{ $b->lokasi ?? '-' }}</td>
+                        <td class="px-5 py-3 text-right font-semibold text-slate-100">
+                            {{ $b->stok }} <span class="font-normal text-muted">{{ $b->satuan }}</span>
+                        </td>
+                        <td class="px-5 py-3 text-right text-slate-400">{{ $b->stok_minimum }}</td>
+                        <td class="px-5 py-3">
+                            @if ($status === 'habis')
+                                <span class="rounded-full bg-red-500/15 px-2.5 py-1 text-xs font-semibold text-red-300">Habis</span>
+                            @elseif ($status === 'hampir')
+                                <span class="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-300">Hampir Habis</span>
+                            @else
+                                <span class="rounded-full bg-brand/15 px-2.5 py-1 text-xs font-semibold text-brand">Aman</span>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="px-5 py-10 text-center text-muted">Belum ada data barang.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </div>
 @endsection
@@ -199,25 +202,44 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-$(function () {
-    $('#tabel_dashboard').DataTable({
-        order: [[4, 'asc']]
-    });
+document.addEventListener('DOMContentLoaded', function () {
+    // Pencarian dan filter status
+    var cari = document.getElementById('cari');
+    var filter = document.getElementById('filterStatus');
+    var baris = document.querySelectorAll('#tabelStok tbody tr[data-status]');
+
+    function terapkan() {
+        var kata = cari.value.toLowerCase();
+        var status = filter.value;
+        baris.forEach(function (tr) {
+            var cocokTeks = tr.dataset.cari.indexOf(kata) !== -1;
+            var cocokStatus = status === 'semua' || tr.dataset.status === status;
+            tr.classList.toggle('hidden', !(cocokTeks && cocokStatus));
+        });
+    }
+    cari.addEventListener('input', terapkan);
+    filter.addEventListener('change', terapkan);
+
+    // Grafik
+    var teks = '#94a3b8';
+    var garis = 'rgba(255,255,255,0.06)';
 
     new Chart(document.getElementById('chartKategori'), {
         type: 'bar',
         data: {
             labels: @json($perKategori->keys()->values()->all()),
             datasets: [{
-                label: 'Jumlah jenis',
                 data: @json($perKategori->values()->all()),
-                backgroundColor: '#2fbf71',
+                backgroundColor: '#22c55e',
                 borderRadius: 6
             }]
         },
         options: {
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            scales: {
+                x: { ticks: { color: teks }, grid: { display: false } },
+                y: { beginAtZero: true, ticks: { precision: 0, color: teks }, grid: { color: garis } }
+            }
         }
     });
 
@@ -227,10 +249,14 @@ $(function () {
             labels: ['Aman', 'Hampir Habis', 'Habis'],
             datasets: [{
                 data: [{{ $aman }}, {{ $hampir }}, {{ $habis }}],
-                backgroundColor: ['#1e8f4e', '#f0ad4e', '#e74c3c']
+                backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
+                borderWidth: 0
             }]
         },
-        options: { cutout: '70%' }
+        options: {
+            cutout: '68%',
+            plugins: { legend: { labels: { color: teks } } }
+        }
     });
 });
 </script>
